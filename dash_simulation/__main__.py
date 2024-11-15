@@ -1,5 +1,8 @@
+from loguru import logger
+
+
 def main():
-    print("TEST")
+    logger.success("Running application")
 
 
 if __name__ == "__main__":

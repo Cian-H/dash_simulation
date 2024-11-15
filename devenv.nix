@@ -12,6 +12,7 @@
   packages = with pkgs; [
     git
     nushell
+    parallel
   ];
 
   languages.python = {
@@ -27,30 +28,7 @@
     };
   };
 
-  # https://devenv.sh/processes/
-  # processes.cargo-watch.exec = "cargo-watch";
-
-  # https://devenv.sh/services/
-  # services.postgres.enable = true;
-
-  # https://devenv.sh/scripts/
-  scripts.start.exec = ''
-    ./start.nu
-  '';
-
-  enterShell = ''
-    hello
-    git --version
-  '';
-
-  # https://devenv.sh/tasks/
-  # tasks = {
-  #   "myproj:setup".exec = "mytool build";
-  #   "devenv:enterShell".after = [ "myproj:setup" ];
-  # };
-
-  enterTest = ''
-    echo "Running tests"
-    git --version | grep --color=auto "${pkgs.git.version}"
+  scripts.run.exec = ''
+    ./run.sh
   '';
 }

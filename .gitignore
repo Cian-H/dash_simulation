@@ -173,3 +173,4 @@ cython_debug/
 
 dummy_data/
 layers/
+cache/

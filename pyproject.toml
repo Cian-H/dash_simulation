@@ -7,9 +7,11 @@ readme = "README.md"
 packages = [{ include = "src", from = "." }]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.13"
 loguru = "^0.7.2"
 watchdog = "^6.0.0"
+mtpy = { git = "https://github.com/Cian-H/MTPy" }
+dask = { extras = ["complete"], version = "^2024.10.0" }
 
 
 [build-system]

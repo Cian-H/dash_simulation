@@ -1,6 +1,7 @@
 #!/usr/bin/env nu
 
 def main [] {
+    sleep 10sec
     for file in (ls dummy_data) {
         let origin = $file.name
         let target = $origin

@@ -27,6 +27,7 @@
       activate.enable = true;
     };
   };
+  languages.rust.enable = true;
 
   scripts.run.exec = ''
     ./run.sh

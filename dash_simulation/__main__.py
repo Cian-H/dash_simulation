@@ -5,19 +5,27 @@ from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 import sys
 
+from dash_simulation.patched_loader import PatchedAconityLoader
+
 
 logger.remove()
 logger.add(sys.stderr, colorize=True)
 
 
 class LayerHandler(FileSystemEventHandler):
+    def __init__(self, loader, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loader = loader
+
     def on_closed(self, event: FileSystemEvent) -> None:
         logger.info(event)
+        self.loader.read_layer(event.src_path)
 
 
 def main():
     logger.info("Initialising application...")
-    event_handler = LayerHandler()
+    loader = PatchedAconityLoader()
+    event_handler = LayerHandler(loader)
     observer = Observer()
     observer.schedule(event_handler, "./layers/", recursive=False)
     observer.start()

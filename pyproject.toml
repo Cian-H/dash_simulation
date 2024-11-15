@@ -9,6 +9,7 @@ packages = [{ include = "src", from = "." }]
 [tool.poetry.dependencies]
 python = "^3.11"
 loguru = "^0.7.2"
+watchdog = "^6.0.0"
 
 
 [build-system]

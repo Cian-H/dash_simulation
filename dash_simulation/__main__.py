@@ -15,11 +15,17 @@ logger.add(sys.stderr, colorize=True)
 class LayerHandler(FileSystemEventHandler):
     def __init__(self, loader, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.cached_files = set()
         self.loader = loader
 
     def on_closed(self, event: FileSystemEvent) -> None:
         logger.info(event)
-        self.loader.read_layer(event.src_path)
+        if (f := event.src_path) not in self.cached_files:
+            self.cached_files.add(f)
+            logger.info(f"Reading {f}")
+            self.loader.read_layer(f)
+        else:
+            logger.info(f"Skipping {f} (already loaded)")
 
 
 def main():

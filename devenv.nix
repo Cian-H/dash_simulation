@@ -32,4 +32,8 @@
   scripts.run.exec = ''
     ./run.sh
   '';
+
+  tasks."simulation:start" = {
+    exec = ''run'';
+  };
 }

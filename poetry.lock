@@ -1429,7 +1429,7 @@ typer = "^0.12.5"
 type = "git"
 url = "https://github.com/Cian-H/MTPy"
 reference = "HEAD"
-resolved_reference = "6764cab7e2238844148e836bb7efc0a9c01691aa"
+resolved_reference = "7d210b7d895c50c4a6ad2a0592967266ee8fbf53"
 
 [[package]]
 name = "multipledispatch"
@@ -2708,4 +2708,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "795ec22b85fcbd33b664d2489084a1413f75844bf9cb50fb6232f4e55e53d5fb"
+content-hash = "c0b1744077f15af2b85d3a79b7ab6206c2958021ab36a600688d27f5b0989fe0"

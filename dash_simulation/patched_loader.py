@@ -1,5 +1,4 @@
 from dask import dataframe as dd
-from loguru import logger
 from mtpy.loaders.aconity import AconityLoader
 from read_aconity_layers import read_layer
 
@@ -14,9 +13,6 @@ class PatchedAconityLoader(AconityLoader):
             parquet_file_extension=".parquet",
         )
         self.data = dd.concat([self.data, ddf])
-        logger.success(
-            f"File {filename} loaded! Current length: {self.data.shape[0].compute()}"
-        )
 
     def array_to_parquet(self, data):
         ddf = dd.from_array(

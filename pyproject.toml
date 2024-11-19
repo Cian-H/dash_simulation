@@ -12,6 +12,7 @@ loguru = "^0.7.2"
 watchdog = "^6.0.0"
 mtpy = { git = "https://github.com/Cian-H/MTPy" }
 dask = { extras = ["complete"], version = "^2024.10.0" }
+panel = "^1.5.4"
 
 
 [build-system]

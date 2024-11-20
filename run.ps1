@@ -5,6 +5,10 @@ function Cleanup {
     if (Test-Path $cachePath) {
         Remove-Item -Path $cachePath -Recurse -Force
     }
+    $layersPath = Join-Path -Path "." -ChildPath "layers\*"
+    if (Test-Path $layersPath) {
+        Remove-Item -Path $layersPath -Recurse -Force
+    }
 }
 
 try {

@@ -55,13 +55,14 @@ class IncrementalFlattenedTempMapHandler:
         mt = PatchedComposite(self.client)
         mt.loader.data = ddf
         self.layer_rasters.append(mt.scatter2d())
-        opacity = 1 / len(self.layer_rasters)
         raster_iterator = iter(self.layer_rasters)
-        overlay = next(raster_iterator).opts(alpha=opacity)
+        overlay = next(raster_iterator)
         for r in raster_iterator:
-            overlay *= r.opts(alpha=opacity)
+            overlay *= r
         logger.info("Updating Flattened Temperature Map")
-        stream.object = hd.dynspread(overlay).opts(title="Flattened Temperature Map")
+        stream.object = hd.dynspread(overlay).apply.opts(
+            title="Flattened Temperature Map"
+        )
 
 
 class MostRecentTempMapHandler:
@@ -71,7 +72,7 @@ class MostRecentTempMapHandler:
     def __call__(self, stream, *_):
         logger.info("Updating Most Recent Temperature Map")
         # No need to re-render, just grab the plot from the flattening object
-        stream.object = self.incflathandler.layer_rasters[-1].opts(
+        stream.object = self.incflathandler.layer_rasters[-1].apply.opts(
             title="Most Recent Temperature Map"
         )
 

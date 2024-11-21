@@ -22,7 +22,7 @@ These requirements are automatically provided by the nix devenv, where that is a
 
 - Windows:
 ```cmd
-./run.bat
+./run.ps1
 ```
 
 - Nix:

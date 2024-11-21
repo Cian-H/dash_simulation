@@ -1,7 +1,8 @@
 #!/usr/bin/env nu
 
 def main [] {
-    sleep 10sec
+    sleep 30sec
+    print $"(timestamp) | (ansi pb)SIMULATE(ansi reset) | (ansi c)simulate_printer(ansi reset):(ansi c)main(ansi reset):(ansi c)13(ansi reset) - Beginning print simulation!"
     for file in (ls dummy_data) {
         let origin = $file.name
         let target = $origin
@@ -13,7 +14,7 @@ def main [] {
 
         print $"(timestamp) | (ansi pb)SIMULATE(ansi reset) | (ansi c)simulate_printer(ansi reset):(ansi c)main(ansi reset):(ansi c)13(ansi reset) - Finished printing layer ($target)"
 
-        sleep 30sec
+        sleep 60sec
     }
 }
 

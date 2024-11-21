@@ -7,9 +7,8 @@ import sys
 
 from dash_simulation.dummy_plots import dummy_flattempmap, dummy_recenttempmap
 from dash_simulation.handlers import (
-    IncrementalFlattenedTempMapHandler,
+    CombinedTempMapHandler,
     LayerHandler,
-    MostRecentTempMapHandler,
 )
 from dash_simulation.patched_composite import PatchedComposite
 
@@ -34,19 +33,15 @@ def app():
     while mt.loader.data is None:
         time.sleep(1)
     # Then create dashboard elements and register handler hooks
-    logger.info("Creating Flattened Temperature Map...")
-    flattempmap_stream_handler = IncrementalFlattenedTempMapHandler(mt.client)
-    flattempmap_pane = pn.pane.HoloViews(dummy_flattempmap())
-    event_handler.add_plot_stream(flattempmap_stream_handler, flattempmap_pane)
-    logger.info("Creating Flattened Temperature Map...")
-    recenttempmap_stream_handler = MostRecentTempMapHandler(flattempmap_stream_handler)
-    recenttempmap_pane = pn.pane.HoloViews(dummy_recenttempmap())
-    event_handler.add_plot_stream(recenttempmap_stream_handler, recenttempmap_pane)
+    logger.info("Creating Temperature Maps...")
+    tempmap_stream_handler = CombinedTempMapHandler(mt.client)
+    tempmap_pane = pn.pane.HoloViews(dummy_flattempmap() + dummy_recenttempmap())
+    event_handler.add_plot_stream(tempmap_stream_handler, tempmap_pane)
     # Finally, create and return dashboard object
     return pn.template.MaterialTemplate(
         site="Panel",
         title="Live PBF Dashboard",
-        main=[flattempmap_pane, recenttempmap_pane],
+        main=[tempmap_pane],
     )
 
 

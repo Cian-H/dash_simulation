@@ -41,6 +41,11 @@ class LayerHandler(FileSystemEventHandler):
             logger.info(f"Skipping {f} (already loaded)")
 
 
+class FakePane:
+    def __init__(self, obj):
+        self.object = obj
+
+
 class IncrementalFlattenedTempMapHandler:
     def __init__(self, client):
         self.layer_rasters = []
@@ -69,3 +74,16 @@ class MostRecentTempMapHandler:
         stream.object = self.incflathandler.layer_rasters[-1].opts(
             title="Most Recent Temperature Map"
         )
+
+
+class CombinedTempMapHandler:
+    def __init__(self, client):
+        self.flattened_handler = IncrementalFlattenedTempMapHandler(client)
+        self.mostrecent_handler = MostRecentTempMapHandler(self.flattened_handler)
+
+    def __call__(self, stream, ddf):
+        flattened_stream = FakePane(None)
+        mostrecent_stream = FakePane(None)
+        self.flattened_handler(flattened_stream, ddf)
+        self.mostrecent_handler(mostrecent_stream, ddf)
+        stream.object = flattened_stream.object + mostrecent_stream.object

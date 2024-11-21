@@ -13,7 +13,7 @@ def main [] {
 
         print $"(timestamp) | (ansi pb)SIMULATE(ansi reset) | (ansi c)simulate_printer(ansi reset):(ansi c)main(ansi reset):(ansi c)13(ansi reset) - Finished printing layer ($target)"
 
-        sleep 3sec
+        sleep 30sec
     }
 }
 

@@ -4,7 +4,7 @@ from read_aconity_layers import read_layer
 
 
 class PatchedAconityLoader(AconityLoader):
-    def read_layer(self, filename):
+    def stream_layer(self, filename):
         data = read_layer(filename)
         layer_dir, storage_options = self.array_to_parquet(data)
         ddf = dd.read_parquet(
@@ -13,6 +13,7 @@ class PatchedAconityLoader(AconityLoader):
             parquet_file_extension=".parquet",
         )
         self.data = dd.concat([self.data, ddf])
+        return ddf
 
     def array_to_parquet(self, data):
         ddf = dd.from_array(
@@ -24,6 +25,7 @@ class PatchedAconityLoader(AconityLoader):
         live_cache = f"{self._data_cache}live/"
         self.fs.mkdirs(live_cache, exist_ok=True)
         current_layer = f"{live_cache}{self.next_layer()}"
+        ddf = ddf.repartition(partition_size="100MB")
         ddf.to_parquet(
             self.fs.unstrip_protocol(current_layer),
             storage_options=target_options,

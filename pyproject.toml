@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "A simulation of a dashboard in a live printing environment"
 authors = ["Cian Hughes <chughes000@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "src", from = "." }]
+packages = [{ include = "dash_simulation", from = "." }]
+package-mode = true
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
@@ -13,6 +14,7 @@ watchdog = "^6.0.0"
 mtpy = { git = "https://github.com/Cian-H/MTPy" }
 dask = { extras = ["complete"], version = "^2024.10.0" }
 panel = "^1.5.4"
+watchfiles = "^0.24.0"
 
 
 [build-system]

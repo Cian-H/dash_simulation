@@ -1,5 +1,7 @@
+import holoviews as hv
 import holoviews.operation.datashader as hd
 from loguru import logger
+import pandas as pd
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 
 from dash_simulation.patched_composite import PatchedComposite
@@ -19,9 +21,7 @@ class LayerHandler(FileSystemEventHandler):
 
     def add_plot_stream(self, plot_handler, stream):
         self.out_stream_handlers.append((plot_handler, stream))
-        logger.warning(
-            f"Event output stream {stream} added with handler {plot_handler}"
-        )
+        logger.warning(f"Event output stream {stream} added with handler {plot_handler}")
 
     def on_closed(self, event: FileSystemEvent) -> None:
         logger.info(event)
@@ -60,9 +60,7 @@ class IncrementalFlattenedTempMapHandler:
         for r in raster_iterator:
             overlay *= r
         logger.info("Updating Flattened Temperature Map")
-        stream.object = hd.dynspread(overlay).apply.opts(
-            title="Flattened Temperature Map"
-        )
+        stream.object = hd.dynspread(overlay).apply.opts(title="Flattened Temperature Map")
 
 
 class MostRecentTempMapHandler:
@@ -88,3 +86,56 @@ class CombinedTempMapHandler:
         self.flattened_handler(flattened_stream, ddf)
         self.mostrecent_handler(mostrecent_stream, ddf)
         stream.object = flattened_stream.object + mostrecent_stream.object
+
+
+class TempScatterHandler:
+    def __init__(self):
+        self.layer_rasters = []
+
+    def __call__(self, stream, ddf):
+        indexed_ddf = ddf.reset_index()
+        layer_scatter = hd.dynspread(
+            hd.rasterize(
+                hv.Points(indexed_ddf, kdims=["index", "t"], vdims=["x", "y", "z"]),
+                aggregator="count",
+            )
+        ).opts(cmap="viridis", height=300, colorbar=True)
+        overlay = layer_scatter
+        if self.layer_rasters:
+            for r in self.layer_rasters:
+                overlay *= r
+        self.layer_rasters.append(layer_scatter)
+        logger.info("Updating Temperature Scatters")
+        stream.object = overlay.apply.opts(
+            title="Overall Temperature Scatter"
+        ) + layer_scatter.apply.opts(title="Intra-Layer Temperature Scatter")
+
+
+class TableHandler:
+    def __init__(self, client):
+        self.client = client
+
+    def __call__(self, stream, ddf):
+        logger.info("Calculating layer statistics...")
+        mt = PatchedComposite(self.client)
+        mt.loader.data = ddf
+        stats = mt.calculate_stats(groupby="z")
+        df = pd.DataFrame()
+        for k, v in stats.items():
+            df[k] = v["t"]
+        df = df.reset_index().rename(
+            {
+                "z": "Z (mm)",
+                "min": "Min",
+                "max": "Max",
+                "mean": "Mean",
+                "std": "Std Dev",
+                "stderr": "Std Err",
+                "ci_error": "CI Err",
+                "ci_min": "CI Min",
+                "ci_max": "CI Max",
+            },
+            axis=1,
+        )
+        logger.info("Updating Table")
+        stream.object = pd.concat([stream.object, df]).reset_index(drop=True)

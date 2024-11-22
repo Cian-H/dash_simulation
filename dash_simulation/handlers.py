@@ -1,5 +1,4 @@
 import holoviews as hv
-import holoviews.operation.datashader as hd
 from loguru import logger
 import pandas as pd
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
@@ -41,74 +40,35 @@ class LayerHandler(FileSystemEventHandler):
             logger.info(f"Skipping {f} (already loaded)")
 
 
-class FakePane:
-    def __init__(self, obj):
-        self.object = obj
-
-
-class IncrementalFlattenedTempMapHandler:
-    def __init__(self, client):
-        self.layer_rasters = []
-        self.client = client
+class TemperaturePlotHandler:
+    def __init__(self, mt):
+        self.mt = mt
 
     def __call__(self, stream, ddf):
-        mt = PatchedComposite(self.client)
-        mt.loader.data = ddf
-        self.layer_rasters.append(mt.scatter2d())
-        raster_iterator = iter(self.layer_rasters)
-        overlay = next(raster_iterator)
-        for r in raster_iterator:
-            overlay *= r
-        logger.info("Updating Flattened Temperature Map")
-        stream.object = hd.dynspread(overlay).apply.opts(title="Flattened Temperature Map")
-
-
-class MostRecentTempMapHandler:
-    def __init__(self, incflathandler: IncrementalFlattenedTempMapHandler):
-        self.incflathandler = incflathandler
-
-    def __call__(self, stream, *_):
-        logger.info("Updating Most Recent Temperature Map")
-        # No need to re-render, just grab the plot from the flattening object
-        stream.object = self.incflathandler.layer_rasters[-1].apply.opts(
-            title="Most Recent Temperature Map"
+        logger.info("Updating tempreature plots.")
+        local_mt = PatchedComposite(self.mt.client)
+        local_mt.loader.data = ddf
+        logger.info("Updating most recent temperature plots.")
+        local_scatter, local_dist = self.plots_from_mt(local_mt)
+        local_scatter = local_scatter.apply.opts(
+            title="Most Recent Layer Temperature Map", xlim=(30, 140), ylim=(-150, -40)
         )
+        local_dist = local_dist.apply.opts(
+            title="Most Recent Layer Temperature Distribution", height=300
+        )
+        logger.info("Updating overall temperature plots.")
+        overall_scatter, overall_dist = self.plots_from_mt(self.mt)
+        overall_scatter = overall_scatter.apply.opts(
+            title="Overall Temperature Map", xlim=(30, 140), ylim=(-150, -40)
+        )
+        overall_dist = overall_dist.apply.opts(title="Overall Temperature Distribution", height=300)
+        logger.info("Streaming to dashboard.")
+        stream.object = (local_scatter + overall_scatter + local_dist + overall_dist).cols(2)
 
-
-class CombinedTempMapHandler:
-    def __init__(self, client):
-        self.flattened_handler = IncrementalFlattenedTempMapHandler(client)
-        self.mostrecent_handler = MostRecentTempMapHandler(self.flattened_handler)
-
-    def __call__(self, stream, ddf):
-        flattened_stream = FakePane(None)
-        mostrecent_stream = FakePane(None)
-        self.flattened_handler(flattened_stream, ddf)
-        self.mostrecent_handler(mostrecent_stream, ddf)
-        stream.object = flattened_stream.object + mostrecent_stream.object
-
-
-class TempScatterHandler:
-    def __init__(self):
-        self.layer_rasters = []
-
-    def __call__(self, stream, ddf):
-        indexed_ddf = ddf.reset_index()
-        layer_scatter = hd.dynspread(
-            hd.rasterize(
-                hv.Points(indexed_ddf, kdims=["index", "t"], vdims=["x", "y", "z"]),
-                aggregator="count",
-            )
-        ).opts(cmap="viridis", height=300, colorbar=True)
-        overlay = layer_scatter
-        if self.layer_rasters:
-            for r in self.layer_rasters:
-                overlay *= r
-        self.layer_rasters.append(layer_scatter)
-        logger.info("Updating Temperature Scatters")
-        stream.object = overlay.apply.opts(
-            title="Overall Temperature Scatter"
-        ) + layer_scatter.apply.opts(title="Intra-Layer Temperature Scatter")
+    def plots_from_mt(self, mt):
+        scatter = mt.scatter2d()
+        dist = hv.Distribution(mt.loader.data, kdims=["t"])
+        return scatter, dist
 
 
 class TableHandler:

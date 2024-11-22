@@ -12,7 +12,7 @@ function Cleanup {
 }
 
 try {
-    $task1 = Start-Process -FilePath "python" -ArgumentList "-m panel serve ./dash_simulation/app.py --show" -NoNewWindow -PassThru
+    $task1 = Start-Process -FilePath "python" -ArgumentList "-m dash_simulation" -NoNewWindow -PassThru
     $task2 = Start-Process -FilePath "./simulate_printer.nu" -NoNewWindow -PassThru
 
     $task1.WaitForExit()

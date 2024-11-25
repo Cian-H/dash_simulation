@@ -10,35 +10,47 @@ def dummy_df():
 
 
 @lru_cache(maxsize=1)
-def dummy_tempmap():
-    return hd.dynspread(hd.rasterize(hv.Points(dummy_df()))).opts(xlim=(30, 140), ylim=(-150, -40))
+def dummy_tempscatter():
+    return (
+        hd.dynspread(hd.rasterize(hv.Points(dummy_df(), kdims=["x", "y"], vdims=["t"])))
+        .opts(xlim=(30, 140), ylim=(-150, -40))
+        .opts(colorbar=True, cmap="plasma")
+    )
 
 
 @lru_cache(maxsize=1)
 def dummy_tempdist():
-    return hv.Distribution(dummy_df()["t"])  # .opts(xlim=(35, 140), ylim=(-160, -30))
+    return hv.Distribution(dummy_df()["t"])
 
 
-def dummy_flattempmap():
-    return dummy_tempmap().apply.opts(title="Overall Temperature Map")
+def dummy_overalltempscatter():
+    return dummy_tempscatter().apply.opts(title="Overall Temperature Map")
 
 
-def dummy_recenttempmap():
-    return dummy_tempmap().apply.opts(title="Most Recent Layer Temperature Map")
+def dummy_recenttempscatter():
+    return dummy_tempscatter().apply.opts(title="Most Recent Layer Temperature Map")
 
 
 def dummy_tempmaps():
-    return dummy_flattempmap() + dummy_recenttempmap()
+    return (dummy_overalltempscatter() + dummy_recenttempscatter()).opts(shared_axes=True)
 
 
-def dummy_tempdistributions():
+def dummy_overalltempdist():
+    return dummy_tempdist().apply.opts(title="Overall Temperature Distribution", height=300)
+
+
+def dummy_recenttempdist():
     return dummy_tempdist().apply.opts(
-        height=300, title="Overall Temperature Distribution"
-    ) + dummy_tempdist().apply.opts(height=300, title="Most Recent Layer Temperature Distribution")
+        title="Most Recent Layer Temperature Distribution", height=300
+    )
+
+
+def dummy_tempdists():
+    return (dummy_overalltempdist() + dummy_overalltempdist()).opts(shared_axes=True)
 
 
 def dummy_tempplots():
-    return (dummy_tempmaps() + dummy_tempdistributions()).cols(2)
+    return dummy_tempmaps(), dummy_tempdists()
 
 
 @lru_cache(maxsize=1)

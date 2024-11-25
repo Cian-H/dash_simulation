@@ -5,12 +5,7 @@ import time
 from watchdog.observers import Observer
 import sys
 
-from dash_simulation.dummy_plots import (
-    dummy_flattempmap,
-    dummy_recenttempmap,
-    dummy_tempdistributions,
-    dummy_stats_df,
-)
+from dash_simulation.dummy_plots import dummy_stats_df, dummy_tempplots
 from dash_simulation.handlers import TemperaturePlotHandler, LayerHandler, TableHandler
 from dash_simulation.patched_composite import PatchedComposite
 
@@ -39,10 +34,11 @@ def app():
     # Then create dashboard elements and register handler hooks
     logger.info("Creating Temperature Maps...")
     tempplot_stream_handler = TemperaturePlotHandler(mt)
-    tempplot_pane = pn.pane.HoloViews(
-        (dummy_flattempmap() + dummy_recenttempmap() + dummy_tempdistributions()).cols(2)
-    )
-    event_handler.add_plot_stream(tempplot_stream_handler, tempplot_pane)
+    dummy_scatters, dummy_dists = dummy_tempplots()
+    tempscatters_pane = pn.pane.HoloViews(dummy_scatters)
+    tempdists_pane = pn.pane.HoloViews(dummy_dists)
+    tempplots_panes = (tempscatters_pane, tempdists_pane)
+    event_handler.add_plot_stream(tempplot_stream_handler, tempplots_panes)
     logger.info("Creating Temperature Statistics Table...")
     table_panel = pn.pane.DataFrame(dummy_stats_df(), index=False)
     table_handler = TableHandler(mt.client)
@@ -52,7 +48,7 @@ def app():
         site="Meltpool Tomography",
         title="Live PBF Dashboard",
         logo="assets/logo.png",
-        main=[tempplot_pane, table_panel],
+        main=[tempscatters_pane, tempdists_pane, table_panel],
     )
 
 

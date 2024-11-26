@@ -45,15 +45,15 @@ class LayerHandler(FileSystemEventHandler):
             logger.info(f"Skipping {f} (already loaded)")
 
 
-async def update_stream(stream, obj):
-    logger.info(f"Streaming {obj} to {stream}...")
-    stream.object = obj
-    logger.success(f"{stream} updated!")
-
-
 class TemperaturePlotHandler:
     def __init__(self, mt):
         self.mt = mt
+
+    @staticmethod
+    async def update_stream(stream, obj):
+        logger.info(f"Streaming {obj} to {stream}...")
+        stream.object = obj
+        logger.success(f"{stream} updated!")
 
     async def __call__(self, streams, ddf):
         logger.info("Updating tempreature plots.")
@@ -62,17 +62,17 @@ class TemperaturePlotHandler:
         logger.info("Updating most recent temperature plots.")
         local_scatter, local_dist = self.plots_from_mt(local_mt)
         local_scatter = local_scatter.opts(title="Most Recent Layer Temperature Map")
-        local_dist = local_dist.opts(title="Most Recent Layer Temperature Distribution")
+        local_dist = local_dist.opts(height=300, title="Most Recent Layer Temperature Distribution")
         logger.info("Updating overall temperature plots.")
         overall_scatter, overall_dist = self.plots_from_mt(self.mt)
         overall_scatter = overall_scatter.opts(title="Overall Temperature Map")
-        overall_dist = overall_dist.opts(title="Overall Temperature Distribution")
+        overall_dist = overall_dist.opts(height=300, title="Overall Temperature Distribution")
         scatters = (overall_scatter + local_scatter).opts(shared_axes=True)
-        dists = (overall_dist + local_dist).opts(height=300, shared_axes=True)
+        dists = (overall_dist + local_dist).opts(shared_axes=True)
         scatter_stream, dist_stream = streams
 
-        p1 = asyncio.create_task(update_stream(scatter_stream, scatters))
-        p2 = asyncio.create_task(update_stream(dist_stream, dists))
+        p1 = asyncio.create_task(self.update_stream(scatter_stream, scatters))
+        p2 = asyncio.create_task(self.update_stream(dist_stream, dists))
         await p1
         await p2
 
@@ -86,6 +86,12 @@ class TableHandler:
     def __init__(self, client):
         self.client = client
 
+    @staticmethod
+    async def update_stream(stream, df):
+        logger.info(f"Streaming {df} to {stream}...")
+        stream.value = pd.concat([stream.value, df]).reset_index(drop=True)
+        logger.success(f"{stream} updated!")
+
     async def __call__(self, stream, ddf):
         logger.info("Calculating layer statistics...")
         mt = PatchedComposite(self.client)
@@ -94,19 +100,23 @@ class TableHandler:
         df = pd.DataFrame()
         for k, v in stats.items():
             df[k] = v["t"]
-        df = df.reset_index().rename(
-            {
-                "z": "Z (mm)",
-                "min": "Min",
-                "max": "Max",
-                "mean": "Mean",
-                "std": "Std Dev",
-                "stderr": "Std Err",
-                "ci_error": "CI Err",
-                "ci_min": "CI Min",
-                "ci_max": "CI Max",
-            },
-            axis=1,
+        df = (
+            df.reset_index()
+            .rename(
+                {
+                    "z": "Z (mm)",
+                    "min": "Min",
+                    "max": "Max",
+                    "mean": "Mean",
+                    "std": "Std Dev",
+                    "stderr": "Std Err",
+                    "ci_error": "CI Err",
+                    "ci_min": "CI Min",
+                    "ci_max": "CI Max",
+                },
+                axis=1,
+            )
+            .set_index("Z (mm)", drop=True)
         )
         logger.info("Updating Table")
-        await update_stream(stream, pd.concat([stream.object, df]).reset_index(drop=True))
+        await self.update_stream(stream, df)

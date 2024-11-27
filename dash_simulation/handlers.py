@@ -82,15 +82,22 @@ class TemperaturePlotHandler:
         return scatter, dist
 
 
-class TableHandler:
+class TemperatureStatsHandler:
     def __init__(self, client):
         self.client = client
 
     @staticmethod
-    async def update_stream(stream, df):
-        logger.info(f"Streaming {df} to {stream}...")
-        stream.value = pd.concat([stream.value, df]).reset_index(drop=True)
-        logger.success(f"{stream} updated!")
+    async def update_streams(streams, df):
+        ex_stream, stats_stream = streams
+        logger.debug(f"Adding {df} to stats_df...")
+        prev_df = stats_stream.value
+        stats_df = df if prev_df is dummy_stats_df() else pd.concat([prev_df, df]).reset_index()
+        logger.debug(f"Streaming {df} to {stats_stream}...")
+        stats_stream.value = stats_df
+        logger.debug(f"Streaming {df} to {ex_stream}...")
+        ex_stream._data = stats_df
+        ex_stream._refresh()
+        logger.success(f"{stats_stream} and {ex_stream} updated!")
 
     async def __call__(self, stream, ddf):
         logger.info("Calculating layer statistics...")
@@ -119,4 +126,5 @@ class TableHandler:
             .set_index("Z (mm)", drop=True)
         )
         logger.info("Updating Table")
-        await self.update_stream(stream, df)
+        await self.update_streams(stream, df)
+        logger.success("Temperature Statistics Updated!")

@@ -33,14 +33,14 @@ def app(client=None):
     while mt.loader.data is None:
         time.sleep(1)
     # Then create dashboard elements and register handler hooks
-    logger.info("Creating Temperature Maps tab...")
+    logger.debug("Creating Temperature Maps tab...")
     tempplot_stream_handler = TemperaturePlotHandler(mt)
     dummy_scatters, dummy_dists = dummy_tempplots()
     tempscatters_pane = pn.pane.HoloViews(dummy_scatters)
     tempdists_pane = pn.pane.HoloViews(dummy_dists)
     tempplots_panes = (tempscatters_pane, tempdists_pane)
     event_handler.add_plot_stream(tempplot_stream_handler, tempplots_panes)
-    logger.info("Creating Layer Statistics tab...")
+    logger.debug("Creating Layer Statistics tab...")
     dsdf = dummy_stats_df()
     dsdf_fmt = {c: NumberFormatter(format="0.00") for c in ("Z (mm)", *dsdf.columns)}
     table_pane = pn.widgets.DataFrame(dsdf, sortable=True, formatters=dsdf_fmt)

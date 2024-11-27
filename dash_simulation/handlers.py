@@ -4,6 +4,7 @@ from loguru import logger
 import pandas as pd
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 
+from dash_simulation.dummy_plots import dummy_stats_df
 from dash_simulation.patched_composite import PatchedComposite
 
 
@@ -29,10 +30,10 @@ class LayerHandler(FileSystemEventHandler):
             await p
 
     def on_closed(self, event: FileSystemEvent) -> None:
-        logger.info(event)
+        logger.debug(event)
         if (f := event.src_path) not in self.cached_files:
             self.cached_files.add(f)
-            logger.info(f"Reading {f}")
+            logger.debug(f"Reading {f}")
             ddf = self.loader.stream_layer(f)
             new_len = self.loader.data.shape[0].compute()
             logger.success(f"File {f} loaded! Current length: {new_len}")
@@ -51,19 +52,19 @@ class TemperaturePlotHandler:
 
     @staticmethod
     async def update_stream(stream, obj):
-        logger.info(f"Streaming {obj} to {stream}...")
+        logger.debug(f"Streaming {obj} to {stream}...")
         stream.object = obj
         logger.success(f"{stream} updated!")
 
     async def __call__(self, streams, ddf):
-        logger.info("Updating tempreature plots.")
+        logger.debug("Updating tempreature plots.")
         local_mt = PatchedComposite(self.mt.client)
         local_mt.loader.data = ddf
-        logger.info("Updating most recent temperature plots.")
+        logger.debug("Updating most recent temperature plots.")
         local_scatter, local_dist = self.plots_from_mt(local_mt)
         local_scatter = local_scatter.opts(title="Most Recent Layer Temperature Map")
         local_dist = local_dist.opts(height=300, title="Most Recent Layer Temperature Distribution")
-        logger.info("Updating overall temperature plots.")
+        logger.debug("Updating overall temperature plots.")
         overall_scatter, overall_dist = self.plots_from_mt(self.mt)
         overall_scatter = overall_scatter.opts(title="Overall Temperature Map")
         overall_dist = overall_dist.opts(height=300, title="Overall Temperature Distribution")
@@ -100,7 +101,7 @@ class TemperatureStatsHandler:
         logger.success(f"{stats_stream} and {ex_stream} updated!")
 
     async def __call__(self, stream, ddf):
-        logger.info("Calculating layer statistics...")
+        logger.debug("Calculating layer statistics...")
         mt = PatchedComposite(self.client)
         mt.loader.data = ddf
         stats = mt.calculate_stats(groupby="z")
@@ -125,6 +126,6 @@ class TemperatureStatsHandler:
             )
             .set_index("Z (mm)", drop=True)
         )
-        logger.info("Updating Table")
+        logger.debug("Updating Temperature Statistics...")
         await self.update_streams(stream, df)
         logger.success("Temperature Statistics Updated!")

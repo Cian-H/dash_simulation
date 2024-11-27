@@ -48,6 +48,13 @@ def app(client=None):
     tempstats_handler = TemperatureStatsHandler(mt.client)
     tempstats_panes = (explorer_pane, table_pane)
     event_handler.add_plot_stream(tempstats_handler, tempstats_panes)
+    logger.debug("Creating Cluster Status tab...")
+    status_pane = pn.pane.HTML(
+        f"""
+            <iframe src="{mt.cluster.dashboard_link}" style="width: 100%; height: 100%; border: none;"></iframe>
+        """,
+        sizing_mode="stretch_both",
+    )
     logger.debug("Creating chat interface...")
     chat = pn.chat.ChatInterface(show_undo=False, show_rerun=False, width=512)
     logger.debug("Arranging layout...")
@@ -56,6 +63,7 @@ def app(client=None):
     tabs = pn.Tabs(
         ("Temperature Maps", plots_page),
         ("Layer Statistics", table_page),
+        ("Cluster Status", status_pane),
         sizing_mode="scale_width",
     )
     page = pn.Row(tabs, chat)

@@ -92,7 +92,7 @@ class TemperatureStatsHandler:
         ex_stream, stats_stream = streams
         logger.debug(f"Adding {df} to stats_df...")
         prev_df = stats_stream.value
-        stats_df = df if prev_df is dummy_stats_df() else pd.concat([prev_df, df]).reset_index()
+        stats_df = df if prev_df is dummy_stats_df() else pd.concat([prev_df, df])
         logger.debug(f"Streaming {df} to {stats_stream}...")
         stats_stream.value = stats_df
         logger.debug(f"Streaming {df} to {ex_stream}...")

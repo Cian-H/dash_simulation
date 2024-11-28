@@ -1,5 +1,6 @@
 import atexit
 from bokeh.models.widgets.tables import NumberFormatter
+from functools import cache
 import hvplot.pandas
 from loguru import logger
 import panel as pn
@@ -16,6 +17,14 @@ logger.remove()
 logger.add(sink=sys.stderr, level="DEBUG", colorize=True)
 atexit.register(lambda: logger.warning("Closing python interpreter"))
 pn.extension("plotly", "perspective")
+
+
+@cache
+def get_client():
+    from dask.distributed import Client, LocalCluster
+
+    cluster = LocalCluster()
+    return Client(cluster)
 
 
 def app(client=None):
@@ -77,4 +86,4 @@ def app(client=None):
 
 
 if __name__.startswith("bokeh_app"):
-    app().servable()
+    app(client=get_client()).servable()

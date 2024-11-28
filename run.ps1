@@ -13,7 +13,7 @@ function Cleanup {
 
 try {
     $task1 = Start-Process -FilePath "python" -ArgumentList "-m panel serve dash_simulation/app.py --port 4242 --allow-websocket-origin=127.0.0.1:4242" -NoNewWindow -PassThru
-    $task2 = Start-Process -FilePath "./simulate_printer.nu" -NoNewWindow -PassThru
+    $task2 = Start-Sleep -Seconds 10; Start-Process -FilePath "./simulate_printer.nu" -NoNewWindow -PassThru
 
     $task1.WaitForExit()
     $task2.WaitForExit()

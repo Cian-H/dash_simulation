@@ -5,11 +5,8 @@
   inputs,
   ...
 }: {
-  # https://devenv.sh/basics/
-  env.GREET = "devenv";
-
-  # https://devenv.sh/packages/
   packages = with pkgs; [
+    electron_33-bin
     git
     nushell
     parallel
